@@ -1,103 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
 class MapRouteScreen extends StatefulWidget {
-  const MapRouteScreen({Key? key}) : super(key: key);
-
   @override
-  State<MapRouteScreen> createState() => _MapRouteScreenState();
+  _MapRouteScreenState createState() => _MapRouteScreenState();
 }
 
 class _MapRouteScreenState extends State<MapRouteScreen> {
-  GoogleMapController? _mapController;
-  final Set<Polyline> _polylines = {};
-  final Set<Marker> _markers = {};
+  static final LatLng _startLocation = LatLng(41.1579, -8.6291);
+  static final LatLng _endLocation = LatLng(41.1609, -8.6261);
+  final mapController = MapController();
 
-  // Coordenadas simuladas para Porto, Portugal
-  static const LatLng _userLocation = LatLng(41.1579, -8.6291);
-  static const LatLng _restaurantLocation = LatLng(41.1609, -8.6261);
+  List<LatLng> _routePoints = [];
 
   @override
   void initState() {
     super.initState();
-    _setRouteAndMarkers();
-  }
-
-  void _setRouteAndMarkers() {
-    // Rota simulada
-    _polylines.add(
-      Polyline(
-        polylineId: const PolylineId('route'),
-        points: const [
-          _userLocation,
-          LatLng(41.1589, -8.6281),
-          LatLng(41.1599, -8.6271),
-          _restaurantLocation,
-        ],
-        color: Colors.orange,
-        width: 4,
-      ),
-    );
-
-    // Marcadores
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('user'),
-        position: _userLocation,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: const InfoWindow(title: 'Sua localização'),
-      ),
-    );
-
-    _markers.add(
-      Marker(
-        markerId: const MarkerId('restaurant'),
-        position: _restaurantLocation,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        infoWindow: const InfoWindow(title: 'Mister Churrasco'),
-      ),
-    );
+    _routePoints = [
+      _startLocation,
+      LatLng(41.1589, -8.6281),
+      LatLng(41.1599, -8.6271),
+      _endLocation,
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Rota Mais Segura'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.layers),
+            onPressed: () {
+              // Show map style options
+            },
+          ),
+        ],
+      ),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: const CameraPosition(
-              target: _userLocation,
-              zoom: 15,
+          FlutterMap(
+            mapController: mapController,
+            options: MapOptions(
+              initialCenter: _startLocation,
+              initialZoom: 15.0,
             ),
-            polylines: _polylines,
-            markers: _markers,
-            onMapCreated: (controller) => _mapController = controller,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapType: MapType.normal,
-          ),
-          // Botão Voltar
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
-                ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://api.mapbox.com/styles/v1/mapbox/dark-v10/tiles/{z}/{x}/{y}?access_token={accessToken}',
+                additionalOptions: {
+                  'accessToken': 'pk.eyJ1IjoibnVub3RhcCIsImEiOiJjbTFrcWJvdjMwMHdjMmlxeGpqM2xyMnl2In0.Vu-mWPPthAqJ7E5tibNlig',
+                },
               ),
-            ),
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: _routePoints,
+                    color: Colors.orange,
+                    strokeWidth: 4.0,
+                  ),
+                ],
+              ),
+              MarkerLayer(
+                markers: [
+                  // Start marker
+                  Marker(
+                    point: _startLocation,
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.location_on,
+                      color: Colors.blue,
+                      size: 40,
+                    ),
+                  ),
+                  // End marker
+                  Marker(
+                    point: _endLocation,
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.location_on,
+                      color: Colors.orange,
+                      size: 40,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          // Card de informações da rota
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
                 color: Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(20),
@@ -106,77 +106,22 @@ class _MapRouteScreenState extends State<MapRouteScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(Icons.restaurant, color: Colors.orange),
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Mister Churrasco',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Rua Da Maia, Porto, Portugal',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _RouteInfo(
-                        icon: Icons.directions_walk,
-                        title: 'Distância',
-                        value: '1.2 km',
-                      ),
-                      _RouteInfo(
-                        icon: Icons.access_time,
-                        title: 'Tempo est.',
-                        value: '15 min',
-                      ),
-                      _RouteInfo(
-                        icon: Icons.security,
-                        title: 'Segurança',
-                        value: 'Alta',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
+                  RouteInfoHeader(),
+                  SizedBox(height: 16),
+                  RouteInfoStats(),
+                  SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
-                      // Iniciar navegação
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Iniciando navegação...'),
-                        ),
-                      );
+                      // Start navigation
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
-                      minimumSize: const Size(double.infinity, 50),
+                      minimumSize: Size(double.infinity, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    child: const Text('Iniciar Navegação'),
+                    child: Text('Iniciar Navegação'),
                   ),
                 ],
               ),
@@ -188,22 +133,77 @@ class _MapRouteScreenState extends State<MapRouteScreen> {
   }
 }
 
-class _RouteInfo extends StatelessWidget {
+class RouteInfoHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.location_on, color: Colors.orange),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Mister Churrasco',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Rua Da Maia, Porto, Portugal',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class RouteInfoStats extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        RouteInfoCard(
+          icon: Icons.directions_walk,
+          title: 'Distância',
+          value: '1.2 km',
+        ),
+        RouteInfoCard(
+          icon: Icons.access_time,
+          title: 'Tempo estimado',
+          value: '15 min',
+        ),
+        RouteInfoCard(
+          icon: Icons.security,
+          title: 'Segurança',
+          value: 'Alta',
+        ),
+      ],
+    );
+  }
+}
+
+class RouteInfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
 
-  const _RouteInfo({
-    Key? key,
+  const RouteInfoCard({
     required this.icon,
     required this.title,
     required this.value,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.black26,
         borderRadius: BorderRadius.circular(12),
@@ -211,18 +211,18 @@ class _RouteInfo extends StatelessWidget {
       child: Column(
         children: [
           Icon(icon, color: Colors.orange),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.grey,
               fontSize: 12,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),

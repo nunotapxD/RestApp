@@ -1,29 +1,43 @@
 import 'package:flutter/material.dart';
 import '../../widgets/restaurant_card.dart';
 import '../../widgets/custom_bottom_nav.dart';
+import '../../utils/mock_restaurants.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
-  // Mock data para demonstração
-  static const List<Map<String, dynamic>> mockRestaurants = [
-    {
-      'name': 'Mister Churrasco',
-      'imageUrl': 'assets/images/restaurant1.jpg',
-      'rating': 4.5,
-      'distance': '1.2 km',
-      'deliveryTime': '30-45 min',
-      'tags': ['Churrasco', 'Brasileira'],
-    },
-    {
-      'name': 'Tasquinha Europa',
-      'imageUrl': 'assets/images/restaurant2.jpg',
-      'rating': 4.3,
-      'distance': '0.8 km',
-      'deliveryTime': '25-40 min',
-      'tags': ['Portuguesa', 'Tradicional'],
-    },
-  ];
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  List<Map<String, dynamic>> _restaurants = [];
+
+  @override
+  void initState() {
+    super.initState();
+_restaurants = List.from(MockRestaurants.data);
+  }
+
+  void _toggleFavorite(String id) {
+    setState(() {
+      final index = _restaurants.indexWhere((r) => r['id'] == id);
+      if (index != -1) {
+        _restaurants[index]['isFavorite'] = !_restaurants[index]['isFavorite'];
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _restaurants[index]['isFavorite']
+                  ? 'Restaurante adicionado aos favoritos'
+                  : 'Restaurante removido dos favoritos',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,16 +120,16 @@ class HomeScreen extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           children: const [
                             UpdateStory(
-                              imageUrl: 'assets/images/update1.jpg',
-                              title: 'Promoções',
-                            ),
-                            UpdateStory(
-                              imageUrl: 'assets/images/update2.jpg',
+                              imageUrl: 'assets/images/update1.png',
                               title: 'Novidades',
                             ),
                             UpdateStory(
-                              imageUrl: 'assets/images/update3.jpg',
-                              title: 'Trending',
+                              imageUrl: 'assets/images/update2.png',
+                              title: 'Promoções',
+                            ),
+                            UpdateStory(
+                              imageUrl: 'assets/images/update3.png',
+                              title: 'Eventos',
                             ),
                           ],
                         ),
@@ -133,17 +147,31 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       
                       // Restaurantes
-                      ...mockRestaurants.map((restaurant) => Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: RestaurantCard(
-                          name: restaurant['name'],
-                          imageUrl: restaurant['imageUrl'],
-                          rating: restaurant['rating'],
-                          distance: restaurant['distance'],
-                          deliveryTime: restaurant['deliveryTime'],
-                          tags: List<String>.from(restaurant['tags']),
-                        ),
-                      )).toList(),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _restaurants.length,
+                        itemBuilder: (context, index) {
+                          final restaurant = _restaurants[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: RestaurantCard(
+                              id: restaurant['id'],
+                              name: restaurant['name'],
+                              imageUrl: restaurant['imageUrl'],
+                              rating: restaurant['rating'],
+                              reviewCount: restaurant['reviewCount'],
+                              distance: restaurant['distance'],
+                              deliveryTime: restaurant['deliveryTime'],
+                              priceLevel: restaurant['priceLevel'],
+                              tags: List<String>.from(restaurant['tags']),
+                              isOpen: restaurant['isOpen'],
+                              isFavorite: restaurant['isFavorite'],
+                              onFavoritePressed: () => _toggleFavorite(restaurant['id']),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -154,7 +182,12 @@ class HomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 0,
-        onTap: (index) {},
+        onTap: (index) {
+          if (index != 0) {
+            final routes = ['/home', '/saved', '/history', '/profile'];
+            Navigator.pushReplacementNamed(context, routes[index]);
+          }
+        },
       ),
     );
   }
@@ -192,6 +225,15 @@ class UpdateStory extends StatelessWidget {
               child: Image.asset(
                 imageUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[900],
+                    child: const Icon(
+                      Icons.image,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -199,10 +241,11 @@ class UpdateStory extends StatelessWidget {
           Text(
             title,
             style: const TextStyle(
-              color: Colors.white,
+              color: Colors.grey,
               fontSize: 12,
             ),
-            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

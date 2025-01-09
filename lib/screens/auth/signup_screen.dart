@@ -80,18 +80,24 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Social Buttons
-                SocialButton(
-                  text: 'Continuar com Google',
-                  icon: 'assets/icons/google.png',
-                  onPressed: () => _handleSocialSignup('Google'),
-                ),
-                const SizedBox(height: 16),
-                SocialButton(
-                  text: 'Continuar com Apple',
-                  icon: 'assets/icons/apple.png',
-                  onPressed: () => _handleSocialSignup('Apple'),
-                ),
+                                // Social Buttons
+SocialButton(
+  text: 'Continuar com Google',
+  icon: Icons.g_translate_rounded, // Usando um ícone do Material Design para Google
+  onPressed: () {
+    // Implementar registro com Google
+  },
+),
+
+SizedBox(height: 16),
+
+SocialButton(
+  text: 'Continuar com Apple',
+  icon: Icons.apple, // Usando o ícone da Apple do Material Design
+  onPressed: () {
+    // Implementar registro com Apple
+  },
+),
                 
                 const SizedBox(height: 24),
                 Row(

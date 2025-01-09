@@ -7,159 +7,161 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+      body: CustomScrollView(
+        slivers: [
+          const SliverAppBar(
+            floating: true,
+            title: Text('Perfil'),
+            centerTitle: true,
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const ProfileHeader(),
+                const SizedBox(height: 24),
+                const ProfileStats(),
+                const SizedBox(height: 24),
+                ProfileOptions(onLogout: () => _handleLogout(context)),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 3,
+        onTap: (index) => _handleNavigation(context, index),
+      ),
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: const Text('Sair da conta'),
+        content: const Text('Tem certeza que deseja sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                '/', 
+                (route) => false,
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleNavigation(BuildContext context, int index) {
+    final routes = ['/home', '/saved', '/history', '/profile'];
+    if (index != 3) {
+      Navigator.pushReplacementNamed(context, routes[index]);
+    }
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Stack(
             children: [
-              // Profile Header
-              Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.orange,
-                          child: Text(
-                            'JM',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.orange,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.edit,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Joana Morais',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      'Premium UBR',
-                      style: TextStyle(
-                        color: Colors.orange,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+              const CircleAvatar(
+                radius: 50,
+                backgroundColor: Colors.orange,
+                child: Text(
+                  'JM',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-
-              // Profile Stats
-              Container(
-                padding: const EdgeInsets.all(24),
-                margin: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E1E1E),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: const [
-                    _StatItem(
-                      value: '28',
-                      label: 'Pedidos',
-                    ),
-                    _StatItem(
-                      value: '12',
-                      label: 'Restaurantes',
-                    ),
-                    _StatItem(
-                      value: '138',
-                      label: 'Pontos',
-                    ),
-                  ],
-                ),
-              ),
-
-              // Profile Options
-              Container(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    ProfileOptionTile(
-                      icon: Icons.person_outline,
-                      title: 'Editar perfil',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.location_on_outlined,
-                      title: 'Endereços salvos',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.payment_outlined,
-                      title: 'Métodos de pagamento',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.notifications_none,
-                      title: 'Notificações',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.language,
-                      title: 'Idioma',
-                      subtitle: 'Português',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.help_outline,
-                      title: 'Ajuda & Suporte',
-                      onTap: () {},
-                    ),
-                    ProfileOptionTile(
-                      icon: Icons.info_outline,
-                      title: 'Sobre',
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 24),
-                    LogoutButton(
-                      onTap: () => Navigator.pushReplacementNamed(context, '/'),
-                    ),
-                  ],
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.edit,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3,
-        onTap: (index) {},
+          const SizedBox(height: 16),
+          const Text(
+            'Joana Morais',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Text(
+            'Premium Tuga',
+            style: TextStyle(
+              color: Colors.orange,
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
+class ProfileStats extends StatelessWidget {
+  const ProfileStats({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E1E),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: const [
+          StatItem(value: '28', label: 'Pedidos'),
+          StatItem(value: '12', label: 'Restaurantes'),
+          StatItem(value: '138', label: 'Pontos'),
+        ],
+      ),
+    );
+  }
+}
+
+class StatItem extends StatelessWidget {
   final String value;
   final String label;
 
-  const _StatItem({
+  const StatItem({
     Key? key,
     required this.value,
     required this.label,
@@ -189,17 +191,62 @@ class _StatItem extends StatelessWidget {
   }
 }
 
+class ProfileOptions extends StatelessWidget {
+  final VoidCallback onLogout;
+
+  const ProfileOptions({
+    Key? key,
+    required this.onLogout,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        children: [
+          ProfileOptionTile(
+            icon: Icons.person_outline,
+            title: 'Editar perfil',
+            onTap: () {},
+          ),
+          ProfileOptionTile(
+            icon: Icons.location_on_outlined,
+            title: 'Endereços salvos',
+            onTap: () {},
+          ),
+          ProfileOptionTile(
+            icon: Icons.payment_outlined,
+            title: 'Métodos de pagamento',
+            onTap: () {},
+          ),
+          ProfileOptionTile(
+            icon: Icons.notifications_none,
+            title: 'Notificações',
+            onTap: () {},
+          ),
+          ProfileOptionTile(
+            icon: Icons.help_outline,
+            title: 'Ajuda & Suporte',
+            onTap: () {},
+          ),
+          const SizedBox(height: 24),
+          LogoutButton(onTap: onLogout),
+        ],
+      ),
+    );
+  }
+}
+
 class ProfileOptionTile extends StatelessWidget {
   final IconData icon;
   final String title;
-  final String? subtitle;
   final VoidCallback onTap;
 
   const ProfileOptionTile({
     Key? key,
     required this.icon,
     required this.title,
-    this.subtitle,
     required this.onTap,
   }) : super(key: key);
 
@@ -215,20 +262,8 @@ class ProfileOptionTile extends StatelessWidget {
         ),
         child: Icon(icon, color: Colors.orange),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: const TextStyle(color: Colors.grey),
-            )
-          : null,
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
     );
   }
@@ -256,10 +291,7 @@ class LogoutButton extends StatelessWidget {
       ),
       title: const Text(
         'Sair',
-        style: TextStyle(
-          color: Colors.red,
-          fontSize: 16,
-        ),
+        style: TextStyle(color: Colors.red),
       ),
       onTap: onTap,
     );

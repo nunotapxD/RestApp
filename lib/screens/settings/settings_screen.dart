@@ -55,7 +55,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                       Text(
-                        'Premium UBR',
+                        'Premium Tuga',
                         style: TextStyle(
                           color: Colors.orange,
                         ),

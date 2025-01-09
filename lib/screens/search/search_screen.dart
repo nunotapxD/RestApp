@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/restaurant_card.dart';
 import '../../widgets/custom_bottom_nav.dart';
+import '../../utils/mock_restaurants.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -12,6 +13,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedFilter = 'Todos';
+  List<Map<String, dynamic>> _restaurants = [];
 
   final List<String> _filters = [
     'Todos',
@@ -21,30 +23,47 @@ class _SearchScreenState extends State<SearchScreen> {
     'Promoções',
   ];
 
-  // Mock data para demonstração
-  final List<Map<String, dynamic>> _restaurants = [
-    {
-      'name': 'Mister Churrasco',
-      'imageUrl': 'assets/images/restaurant1.jpg',
-      'rating': 4.5,
-      'distance': '1.2 km',
-      'deliveryTime': '30-45 min',
-      'tags': ['Churrasco', 'Brasileira'],
-    },
-    {
-      'name': 'Tasquinha Europa',
-      'imageUrl': 'assets/images/restaurant2.jpg',
-      'rating': 4.3,
-      'distance': '0.8 km',
-      'deliveryTime': '25-40 min',
-      'tags': ['Portuguesa', 'Tradicional'],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+_restaurants = List.from(MockRestaurants.data);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _toggleFavorite(String id) {
+    setState(() {
+      final index = _restaurants.indexWhere((r) => r['id'] == id);
+      if (index != -1) {
+        _restaurants[index]['isFavorite'] = !_restaurants[index]['isFavorite'];
+      }
+    });
+  }
+
+  List<Map<String, dynamic>> get _filteredRestaurants {
+    return _restaurants.where((restaurant) {
+      final nameMatches = restaurant['name']
+          .toLowerCase()
+          .contains(_searchController.text.toLowerCase());
+      
+      if (_selectedFilter == 'Todos') return nameMatches;
+      if (_selectedFilter == 'Melhor avaliados') {
+        return nameMatches && restaurant['rating'] >= 4.5;
+      }
+      if (_selectedFilter == 'Mais próximos') {
+        return nameMatches && 
+          double.parse(restaurant['distance'].split(' ')[0]) <= 1.0;
+      }
+      if (_selectedFilter == 'Mais rápidos') {
+        return nameMatches && 
+          int.parse(restaurant['deliveryTime'].split('-')[0]) <= 30;
+      }
+      return nameMatches;
+    }).toList();
   }
 
   @override
@@ -76,7 +95,6 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     onChanged: (value) {
-                      // Implementar busca
                       setState(() {});
                     },
                   ),
@@ -90,7 +108,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.filter_list, color: Colors.orange),
                     onPressed: () {
-                      // Mostrar modal de filtros
                       showModalBottomSheet(
                         context: context,
                         backgroundColor: const Color(0xFF1E1E1E),
@@ -142,30 +159,48 @@ class _SearchScreenState extends State<SearchScreen> {
 
           // Results
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _restaurants.length,
-              itemBuilder: (context, index) {
-                final restaurant = _restaurants[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: RestaurantCard(
-                    name: restaurant['name'],
-                    imageUrl: restaurant['imageUrl'],
-                    rating: restaurant['rating'],
-                    distance: restaurant['distance'],
-                    deliveryTime: restaurant['deliveryTime'],
-                    tags: List<String>.from(restaurant['tags']),
+            child: _filteredRestaurants.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Nenhum restaurante encontrado',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filteredRestaurants.length,
+                    itemBuilder: (context, index) {
+                      final restaurant = _filteredRestaurants[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: RestaurantCard(
+                          id: restaurant['id'],
+                          name: restaurant['name'],
+                          imageUrl: restaurant['imageUrl'],
+                          rating: restaurant['rating'],
+                          reviewCount: restaurant['reviewCount'],
+                          distance: restaurant['distance'],
+                          deliveryTime: restaurant['deliveryTime'],
+                          priceLevel: restaurant['priceLevel'],
+                          tags: List<String>.from(restaurant['tags']),
+                          isOpen: restaurant['isOpen'],
+                          isFavorite: restaurant['isFavorite'],
+                          onFavoritePressed: () => _toggleFavorite(restaurant['id']),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 1,
-        onTap: (index) {},
+        onTap: (index) {
+          if (index != 1) {
+            final routes = ['/home', '/saved', '/history', '/profile'];
+            Navigator.pushReplacementNamed(context, routes[index]);
+          }
+        },
       ),
     );
   }

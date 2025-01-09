@@ -15,10 +15,10 @@ class HistoryScreen extends StatelessWidget {
         children: [
           // Search Bar
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Procurar no histórico',
+                hintText: 'Procurar pedidos',
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 fillColor: const Color(0xFF1E1E1E),
                 filled: true,
@@ -30,15 +30,15 @@ class HistoryScreen extends StatelessWidget {
             ),
           ),
 
-          // History List
+          // Order List
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: const [
                 _DateHeader(date: 'Hoje'),
-                HistoryItem(
+                _OrderHistoryItem(
                   restaurantName: 'Mister Churrasco',
-                  imageUrl: 'assets/images/restaurant1.jpg',
+                  orderNumber: '#1234',
                   items: ['1x Picanha', '2x Refrigerante'],
                   total: 129.80,
                   time: '14:30',
@@ -46,9 +46,9 @@ class HistoryScreen extends StatelessWidget {
                 ),
                 
                 _DateHeader(date: 'Ontem'),
-                HistoryItem(
+                _OrderHistoryItem(
                   restaurantName: 'Tasquinha Europa',
-                  imageUrl: 'assets/images/restaurant2.jpg',
+                  orderNumber: '#1233',
                   items: ['1x Bacalhau', '1x Vinho'],
                   total: 89.90,
                   time: '20:15',
@@ -56,10 +56,10 @@ class HistoryScreen extends StatelessWidget {
                 ),
                 
                 _DateHeader(date: '12 Janeiro'),
-                HistoryItem(
-                  restaurantName: 'Mister Churrasco',
-                  imageUrl: 'assets/images/restaurant1.jpg',
-                  items: ['1x Costela', '1x Cerveja'],
+                _OrderHistoryItem(
+                  restaurantName: 'Pizza Express',
+                  orderNumber: '#1232',
+                  items: ['1x Pizza Grande', '1x Coca-Cola'],
                   total: 75.50,
                   time: '19:45',
                   status: OrderStatus.cancelled,
@@ -71,7 +71,12 @@ class HistoryScreen extends StatelessWidget {
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 2,
-        onTap: (index) {},
+        onTap: (index) {
+          if (index != 2) {
+            final routes = ['/home', '/saved', '/history', '/profile'];
+            Navigator.pushReplacementNamed(context, routes[index]);
+          }
+        },
       ),
     );
   }
@@ -80,6 +85,7 @@ class HistoryScreen extends StatelessWidget {
 enum OrderStatus {
   delivered,
   cancelled,
+  inProgress,
 }
 
 class _DateHeader extends StatelessWidget {
@@ -106,18 +112,18 @@ class _DateHeader extends StatelessWidget {
   }
 }
 
-class HistoryItem extends StatelessWidget {
+class _OrderHistoryItem extends StatelessWidget {
   final String restaurantName;
-  final String imageUrl;
+  final String orderNumber;
   final List<String> items;
   final double total;
   final String time;
   final OrderStatus status;
 
-  const HistoryItem({
+  const _OrderHistoryItem({
     Key? key,
     required this.restaurantName,
-    required this.imageUrl,
+    required this.orderNumber,
     required this.items,
     required this.total,
     required this.time,
@@ -136,45 +142,28 @@ class HistoryItem extends StatelessWidget {
         children: [
           // Header
           ListTile(
-            leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                imageUrl,
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-            ),
-            title: Text(
-              restaurantName,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+            title: Row(
+              children: [
+                Text(
+                  restaurantName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  orderNumber,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
             subtitle: Text(
               time,
               style: const TextStyle(color: Colors.grey),
             ),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: status == OrderStatus.delivered
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                status == OrderStatus.delivered ? 'Entregue' : 'Cancelado',
-                style: TextStyle(
-                  color: status == OrderStatus.delivered
-                      ? Colors.green
-                      : Colors.red,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            trailing: _buildStatusChip(),
           ),
 
           const Divider(color: Colors.grey),
@@ -201,7 +190,7 @@ class HistoryItem extends StatelessWidget {
                       style: TextStyle(color: Colors.grey),
                     ),
                     Text(
-                      'R\$ ${total.toStringAsFixed(2)}',
+                      '€ ${total.toStringAsFixed(2)}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -219,9 +208,6 @@ class HistoryItem extends StatelessWidget {
                         },
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.orange),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
                         ),
                         child: const Text(
                           'Ver Detalhes',
@@ -235,12 +221,6 @@ class HistoryItem extends StatelessWidget {
                         onPressed: () {
                           // Repetir pedido
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                        ),
                         child: const Text('Pedir Novamente'),
                       ),
                     ),
@@ -250,6 +230,42 @@ class HistoryItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip() {
+    Color color;
+    String text;
+
+    switch (status) {
+      case OrderStatus.delivered:
+        color = Colors.green;
+        text = 'Entregue';
+        break;
+      case OrderStatus.cancelled:
+        color = Colors.red;
+        text = 'Cancelado';
+        break;
+      case OrderStatus.inProgress:
+        color = Colors.orange;
+        text = 'Em andamento';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

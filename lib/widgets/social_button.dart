@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class SocialButton extends StatelessWidget {
   final String text;
-  final String icon;
+  final IconData icon; // Changed from String to IconData
   final VoidCallback onPressed;
 
   const SocialButton({
@@ -26,11 +26,7 @@ class SocialButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            icon,
-            height: 24,
-            width: 24,
-          ),
+          Icon(icon, size: 24, color: Colors.white), // Using Icon widget instead of Image
           const SizedBox(width: 12),
           Text(
             text,

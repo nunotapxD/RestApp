@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/custom_bottom_nav.dart';
 import '../../widgets/restaurant_card.dart';
+import '../../widgets/custom_bottom_nav.dart';
+import '../../utils/mock_restaurants.dart';
 
 class SavedScreen extends StatefulWidget {
   const SavedScreen({Key? key}) : super(key: key);
@@ -10,29 +11,42 @@ class SavedScreen extends StatefulWidget {
 }
 
 class _SavedScreenState extends State<SavedScreen> {
-  String _selectedTab = 'Recentes';
+  List<Map<String, dynamic>> _savedRestaurants = [];
+  String _selectedFilter = 'Recentes';
+  final TextEditingController _searchController = TextEditingController();
 
-  // Mock data para demonstração
-  final List<Map<String, dynamic>> _savedRestaurants = [
-    {
-      'name': 'Mister Churrasco',
-      'imageUrl': 'assets/images/restaurant1.jpg',
-      'rating': 4.5,
-      'distance': '1.2 km',
-      'deliveryTime': '30-45 min',
-      'tags': ['Churrasco', 'Brasileira'],
-      'isOpen': true,
-    },
-    {
-      'name': 'Tasquinha Europa',
-      'imageUrl': 'assets/images/restaurant2.jpg',
-      'rating': 4.3,
-      'distance': '0.8 km',
-      'deliveryTime': '25-40 min',
-      'tags': ['Portuguesa', 'Tradicional'],
-      'isOpen': false,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Simular restaurantes salvos (em um app real, isso viria do backend/storage)
+_savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4.5));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _removeFromFavorites(int index) {
+    setState(() {
+      final removed = _savedRestaurants.removeAt(index);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${removed['name']} removido dos favoritos'),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'Desfazer',
+            onPressed: () {
+              setState(() {
+                _savedRestaurants.insert(index, removed);
+              });
+            },
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +61,7 @@ class _SavedScreenState extends State<SavedScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Procurar restaurantes salvos',
                 hintStyle: const TextStyle(color: Colors.grey),
@@ -59,86 +74,86 @@ class _SavedScreenState extends State<SavedScreen> {
                 ),
               ),
               onChanged: (value) {
-                // Implementar busca
                 setState(() {});
               },
             ),
           ),
 
-          // Tabs
+          // Filter Tabs
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _TabButton(
-                  title: 'Recentes',
-                  isSelected: _selectedTab == 'Recentes',
-                  onTap: () => setState(() => _selectedTab = 'Recentes'),
-                ),
+                _buildFilterTab('Recentes'),
                 const SizedBox(width: 16),
-                _TabButton(
-                  title: 'Restaurantes',
-                  isSelected: _selectedTab == 'Restaurantes',
-                  onTap: () => setState(() => _selectedTab = 'Restaurantes'),
-                ),
+                _buildFilterTab('Restaurantes'),
               ],
             ),
           ),
 
-          // Saved Restaurants List
+          // Restaurant List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _savedRestaurants.length,
-              itemBuilder: (context, index) {
-                final restaurant = _savedRestaurants[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: RestaurantCard(
-                    name: restaurant['name'],
-                    imageUrl: restaurant['imageUrl'],
-                    rating: restaurant['rating'],
-                    distance: restaurant['distance'],
-                    deliveryTime: restaurant['deliveryTime'],
-                    tags: List<String>.from(restaurant['tags']),
-                    isFavorite: true,
-                    onFavoritePressed: () {
-                      // Implementar remoção dos favoritos
-                      setState(() {
-                        _savedRestaurants.removeAt(index);
-                      });
+            child: _savedRestaurants.isEmpty
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.bookmark_border, size: 64, color: Colors.grey),
+                        SizedBox(height: 16),
+                        Text(
+                          'Nenhum restaurante salvo',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _savedRestaurants.length,
+                    itemBuilder: (context, index) {
+                      final restaurant = _savedRestaurants[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: RestaurantCard(
+                          id: restaurant['id'],
+                          name: restaurant['name'],
+                          imageUrl: restaurant['imageUrl'],
+                          rating: restaurant['rating'],
+                          reviewCount: restaurant['reviewCount'],
+                          distance: restaurant['distance'],
+                          deliveryTime: restaurant['deliveryTime'],
+                          priceLevel: restaurant['priceLevel'],
+                          tags: List<String>.from(restaurant['tags']),
+                          isOpen: restaurant['isOpen'],
+                          isFavorite: true,
+                          onFavoritePressed: () => _removeFromFavorites(index),
+                        ),
+                      );
                     },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 1,
-        onTap: (index) {},
+        onTap: (index) {
+          if (index != 1) {
+            final routes = ['/home', '/saved', '/history', '/profile'];
+            Navigator.pushReplacementNamed(context, routes[index]);
+          }
+        },
       ),
     );
   }
-}
 
-class _TabButton extends StatelessWidget {
-  final String title;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _TabButton({
-    Key? key,
-    required this.title,
-    required this.isSelected,
-    required this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildFilterTab(String title) {
+    final isSelected = _selectedFilter == title;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        setState(() {
+          _selectedFilter = title;
+        });
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(

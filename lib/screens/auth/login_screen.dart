@@ -59,17 +59,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                SocialButton(
-                  text: 'Continue com Google',
-                  icon: 'assets/icons/google.png',
-                  onPressed: () => _handleSocialLogin('Google'),
-                ),
-                const SizedBox(height: 15),
-                SocialButton(
-                  text: 'Continue com Apple',
-                  icon: 'assets/icons/apple.png',
-                  onPressed: () => _handleSocialLogin('Apple'),
-                ),
+                  SocialButton(
+  text: 'Continuar com Google',
+  icon: Icons.g_translate_rounded, // Usando um ícone do Material Design para Google
+  onPressed: () {
+    // Implementar login com Google
+  },
+),
+
+SizedBox(height: 15),
+
+SocialButton(
+  text: 'Continuar com Apple',
+  icon: Icons.apple, // Usando o ícone da Apple do Material Design
+  onPressed: () {
+    // Implementar login com Apple
+  },
+),
                 const SizedBox(height: 20),
                 Row(
                   children: const [
