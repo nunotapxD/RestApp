@@ -1,7 +1,9 @@
 // lib/widgets/dish_card.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/dish.dart';
+import '../providers/cart_provider.dart';
 
 class DishCard extends StatelessWidget {
   final Dish dish;
@@ -10,6 +12,41 @@ class DishCard extends StatelessWidget {
     super.key,
     required this.dish,
   });
+  void _reorderItems(BuildContext context, List<Map<String, dynamic>> items) {
+    final cartProvider = context.read<CartProvider>();
+    
+    // Limpar carrinho atual
+    cartProvider.clear();
+    
+    for (var item in items) {
+      // Criar o objeto Dish sem o parâmetro quantity
+      final dish = Dish(
+        id: item['id'] ?? DateTime.now().toString(),
+        name: item['name'],
+        description: '',
+        price: item['price'],
+        imageUrl: '',
+      );
+      
+      // Pegar a quantidade do item e adicionar ao carrinho
+      final quantity = item['quantity'] as int;
+      for (int i = 0; i < quantity; i++) {
+        cartProvider.addToCart(dish);
+      }
+    }
+
+    // Mostrar confirmação
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Itens adicionados ao carrinho'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    // Navegação para o carrinho
+    Navigator.pushReplacementNamed(context, '/cart');
+  }
 
   @override
   Widget build(BuildContext context) {

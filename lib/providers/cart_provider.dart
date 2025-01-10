@@ -1,9 +1,5 @@
-// lib/providers/cart_provider.dart
-
 import 'package:flutter/foundation.dart';
 import '../models/dish.dart';
-import '../services/coupon_service.dart';
-import '../services/auth_service.dart';
 
 class CartItem {
   final Dish dish;
@@ -21,13 +17,11 @@ class CartItem {
 
 class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
-  final CouponService _couponService = CouponService();
-  final AuthService _authService = AuthService();
-  String? _appliedCouponCode;
-  bool _requiresBiometrics = false;
+  double _deliveryFee = 5.0;
+  double _discount = 0.0;
+  String? _couponCode;
 
   Map<String, CartItem> get items => {..._items};
-  String? get appliedCouponCode => _appliedCouponCode;
   
   int get itemCount {
     return _items.values.fold(0, (sum, item) => sum + item.quantity);
@@ -37,67 +31,21 @@ class CartProvider extends ChangeNotifier {
     return _items.values.fold(0.0, (sum, item) => sum + item.total);
   }
 
-  double get discount {
-    if (_appliedCouponCode == null) return 0;
-    return _couponService.calculateDiscount(_appliedCouponCode!, subtotal);
+  double get deliveryFee {
+    if (subtotal >= 50) return 0; // Entrega grátis acima de €50
+    return _deliveryFee;
   }
 
-  double get deliveryFee {
-    if (subtotal >= 50) return 0; // Free delivery over €50
-    return 5.0; // Base delivery fee
-  }
+  double get discount => _discount;
+  String? get couponCode => _couponCode;
   
-  double get total {
-    return subtotal - discount + deliveryFee;
-  }
+  double get total => subtotal + deliveryFee - discount;
   
   bool get isEmpty => _items.isEmpty;
 
-  Future<bool> applyCoupon(String code) async {
-    final coupon = _couponService.validateCoupon(code);
-    if (coupon == null) return false;
-    
-    _appliedCouponCode = code;
-    notifyListeners();
-    return true;
-  }
-
-  void removeCoupon() {
-    _appliedCouponCode = null;
-    notifyListeners();
-  }
-
-  Future<bool> requiresBiometricAuth() async {
-    if (!_requiresBiometrics) return false;
-    return await _authService.isBiometricsAvailable();
-  }
-
-  Future<bool> authenticateForPayment() async {
-    if (!_requiresBiometrics) return true;
-    return await _authService.authenticateWithBiometrics();
-  }
-
-  void setRequiresBiometrics(bool value) {
-    _requiresBiometrics = value;
-    notifyListeners();
-  }
-
-  Future<Map<String, dynamic>> getOrderSummary() async {
-    bool canUseBiometrics = await requiresBiometricAuth();
-    
-    return {
-      'subtotal': subtotal,
-      'discount': discount,
-      'deliveryFee': deliveryFee,
-      'total': total,
-      'appliedCoupon': _appliedCouponCode,
-      'itemCount': itemCount,
-      'canUseBiometrics': canUseBiometrics,
-    };
-  }
-
   void addToCart(Dish dish) {
     if (_items.containsKey(dish.id)) {
+      // Atualiza a quantidade se o item já existe
       _items.update(
         dish.id,
         (existingItem) => CartItem(
@@ -107,6 +55,7 @@ class CartProvider extends ChangeNotifier {
         ),
       );
     } else {
+      // Adiciona novo item
       _items.putIfAbsent(
         dish.id,
         () => CartItem(
@@ -137,27 +86,22 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateQuantity(String dishId, int quantity) {
-    if (!_items.containsKey(dishId)) return;
-    
-    if (quantity <= 0) {
-      _items.remove(dishId);
-    } else {
-      _items.update(
-        dishId,
-        (existingItem) => CartItem(
-          dish: existingItem.dish,
-          quantity: quantity,
-          price: existingItem.price,
-        ),
-      );
-    }
+  void applyCoupon(String code, double discountValue) {
+    _couponCode = code;
+    _discount = discountValue;
+    notifyListeners();
+  }
+
+  void removeCoupon() {
+    _couponCode = null;
+    _discount = 0;
     notifyListeners();
   }
 
   void clear() {
     _items.clear();
-    _appliedCouponCode = null;
+    _couponCode = null;
+    _discount = 0;
     notifyListeners();
   }
 }

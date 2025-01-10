@@ -32,7 +32,7 @@ class CustomBottomNavBar extends StatelessWidget {
             children: [
               _NavItem(
                 icon: Icons.home_outlined,
-                selectedIcon: Icons.home,
+                selectedIcon: Icons.home_filled,
                 label: 'Início',
                 isSelected: currentIndex == 0,
                 onTap: () {
@@ -41,12 +41,22 @@ class CustomBottomNavBar extends StatelessWidget {
                 },
               ),
               _NavItem(
-                icon: Icons.bookmark_border,
-                selectedIcon: Icons.bookmark,
-                label: 'Salvos',
+                icon: Icons.shopping_cart_outlined,
+                selectedIcon: Icons.shopping_cart,
+                label: 'Carrinho',
                 isSelected: currentIndex == 1,
                 onTap: () {
                   onTap(1);
+                  Navigator.pushReplacementNamed(context, '/cart');
+                },
+              ),
+              _NavItem(
+                icon: Icons.bookmark_border_outlined,
+                selectedIcon: Icons.bookmark,
+                label: 'Salvos',
+                isSelected: currentIndex == 2,
+                onTap: () {
+                  onTap(2);
                   Navigator.pushReplacementNamed(context, '/saved');
                 },
               ),
@@ -54,9 +64,9 @@ class CustomBottomNavBar extends StatelessWidget {
                 icon: Icons.history_outlined,
                 selectedIcon: Icons.history,
                 label: 'Histórico',
-                isSelected: currentIndex == 2,
+                isSelected: currentIndex == 3,
                 onTap: () {
-                  onTap(2);
+                  onTap(3);
                   Navigator.pushReplacementNamed(context, '/history');
                 },
               ),
@@ -64,9 +74,9 @@ class CustomBottomNavBar extends StatelessWidget {
                 icon: Icons.person_outline,
                 selectedIcon: Icons.person,
                 label: 'Perfil',
-                isSelected: currentIndex == 3,
+                isSelected: currentIndex == 4,
                 onTap: () {
-                  onTap(3);
+                  onTap(4);
                   Navigator.pushReplacementNamed(context, '/profile');
                 },
               ),
@@ -86,7 +96,6 @@ class _NavItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const _NavItem({
-    super.key,
     required this.icon,
     required this.selectedIcon,
     required this.label,
@@ -99,11 +108,10 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        height: 60,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               isSelected ? selectedIcon : icon,

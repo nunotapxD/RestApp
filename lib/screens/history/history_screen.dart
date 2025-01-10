@@ -1,8 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../widgets/custom_bottom_nav.dart';
+import '../../providers/cart_provider.dart';
+import '../../models/dish.dart';
 
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({Key? key}) : super(key: key);
+
+  void _reorderItems(BuildContext context, List<Map<String, dynamic>> items) {
+    // Adicionar itens ao carrinho
+    final cartProvider = context.read<CartProvider>();
+    
+    for (var item in items) {
+      final dish = Dish(
+        id: item['id'] ?? DateTime.now().toString(),
+        name: item['name'],
+        description: '',
+        price: item['price'],
+        imageUrl: '',
+      );
+      
+      for (int i = 0; i < item['quantity']; i++) {
+        cartProvider.addToCart(dish);
+      }
+    }
+
+    // Navegação para o carrinho
+    Navigator.pushReplacementNamed(context, '/cart');
+
+    // Mostrar confirmação
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Itens adicionados ao carrinho'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +47,6 @@ class HistoryScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -29,40 +62,36 @@ class HistoryScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          // Order List
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: const [
-                _DateHeader(date: 'Hoje'),
-                _OrderHistoryItem(
+              children: [
+                _buildDateHeader('Hoje'),
+                _buildOrderHistoryItem(
+                  context,
                   restaurantName: 'Mister Churrasco',
                   orderNumber: '#1234',
-                  items: ['1x Picanha', '2x Refrigerante'],
-                  total: 129.80,
+                  items: [
+                    {'id': 'p1', 'name': 'Picanha na Brasa', 'quantity': 2, 'price': 89.90},
+                    {'id': 'b1', 'name': 'Refrigerante', 'quantity': 2, 'price': 5.90}
+                  ],
+                  total: 189.70,
                   time: '14:30',
                   status: OrderStatus.delivered,
                 ),
                 
-                _DateHeader(date: 'Ontem'),
-                _OrderHistoryItem(
+                _buildDateHeader('Ontem'),
+                _buildOrderHistoryItem(
+                  context,
                   restaurantName: 'Tasquinha Europa',
                   orderNumber: '#1233',
-                  items: ['1x Bacalhau', '1x Vinho'],
-                  total: 89.90,
+                  items: [
+                    {'id': 'b1', 'name': 'Bacalhau à Brás', 'quantity': 1, 'price': 85.90},
+                    {'id': 'b2', 'name': 'Vinho do Porto', 'quantity': 1, 'price': 22.90}
+                  ],
+                  total: 108.80,
                   time: '20:15',
                   status: OrderStatus.delivered,
-                ),
-                
-                _DateHeader(date: '12 Janeiro'),
-                _OrderHistoryItem(
-                  restaurantName: 'Pizza Express',
-                  orderNumber: '#1232',
-                  items: ['1x Pizza Grande', '1x Coca-Cola'],
-                  total: 75.50,
-                  time: '19:45',
-                  status: OrderStatus.cancelled,
                 ),
               ],
             ),
@@ -70,34 +99,18 @@ class HistoryScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 2,
+        currentIndex: 3,
         onTap: (index) {
-          if (index != 2) {
-            final routes = ['/home', '/saved', '/history', '/profile'];
+          if (index != 3) {
+            final routes = ['/home', '/cart', '/saved', '/history', '/profile'];
             Navigator.pushReplacementNamed(context, routes[index]);
           }
         },
       ),
     );
   }
-}
 
-enum OrderStatus {
-  delivered,
-  cancelled,
-  inProgress,
-}
-
-class _DateHeader extends StatelessWidget {
-  final String date;
-
-  const _DateHeader({
-    Key? key,
-    required this.date,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildDateHeader(String date) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Text(
@@ -110,28 +123,16 @@ class _DateHeader extends StatelessWidget {
       ),
     );
   }
-}
 
-class _OrderHistoryItem extends StatelessWidget {
-  final String restaurantName;
-  final String orderNumber;
-  final List<String> items;
-  final double total;
-  final String time;
-  final OrderStatus status;
-
-  const _OrderHistoryItem({
-    Key? key,
-    required this.restaurantName,
-    required this.orderNumber,
-    required this.items,
-    required this.total,
-    required this.time,
-    required this.status,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildOrderHistoryItem(
+    BuildContext context, {
+    required String restaurantName,
+    required String orderNumber,
+    required List<Map<String, dynamic>> items,
+    required double total,
+    required String time,
+    required OrderStatus status,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -140,7 +141,6 @@ class _OrderHistoryItem extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
           ListTile(
             title: Row(
               children: [
@@ -163,12 +163,11 @@ class _OrderHistoryItem extends StatelessWidget {
               time,
               style: const TextStyle(color: Colors.grey),
             ),
-            trailing: _buildStatusChip(),
+            trailing: _buildStatusChip(status),
           ),
 
           const Divider(color: Colors.grey),
 
-          // Order Details
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -177,7 +176,7 @@ class _OrderHistoryItem extends StatelessWidget {
                 ...items.map((item) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        item,
+                        '${item['quantity']}x ${item['name']}',
                         style: const TextStyle(color: Colors.grey),
                       ),
                     )),
@@ -190,7 +189,7 @@ class _OrderHistoryItem extends StatelessWidget {
                       style: TextStyle(color: Colors.grey),
                     ),
                     Text(
-                      '€ ${total.toStringAsFixed(2)}',
+                      '€${total.toStringAsFixed(2)}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -203,9 +202,7 @@ class _OrderHistoryItem extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () {
-                          // Navegar para detalhes do pedido
-                        },
+                        onPressed: () => _showOrderDetails(context, orderNumber, items, total, status),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.orange),
                         ),
@@ -218,9 +215,10 @@ class _OrderHistoryItem extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Repetir pedido
-                        },
+                        onPressed: () => _reorderItems(context, items),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                        ),
                         child: const Text('Pedir Novamente'),
                       ),
                     ),
@@ -234,7 +232,7 @@ class _OrderHistoryItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(OrderStatus status) {
     Color color;
     String text;
 
@@ -269,4 +267,61 @@ class _OrderHistoryItem extends StatelessWidget {
       ),
     );
   }
+
+  void _showOrderDetails(
+    BuildContext context,
+    String orderNumber,
+    List<Map<String, dynamic>> items,
+    double total,
+    OrderStatus status,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text('Pedido $orderNumber'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Itens do Pedido:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text('${item['quantity']}x ${item['name']}'),
+            )),
+            const Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total:'),
+                Text(
+                  '€${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.orange,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum OrderStatus {
+  delivered,
+  cancelled,
+  inProgress,
 }

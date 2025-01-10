@@ -4,8 +4,8 @@ import '../../widgets/custom_bottom_nav.dart';
 import '../../utils/mock_restaurants.dart';
 
 class SavedScreen extends StatefulWidget {
-  const SavedScreen({Key? key}) : super(key: key);
-
+  const SavedScreen({super.key});
+  
   @override
   State<SavedScreen> createState() => _SavedScreenState();
 }
@@ -19,7 +19,7 @@ class _SavedScreenState extends State<SavedScreen> {
   void initState() {
     super.initState();
     // Simular restaurantes salvos (em um app real, isso viria do backend/storage)
-_savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4.5));
+    _savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4.5));
   }
 
   @override
@@ -46,6 +46,16 @@ _savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4
         ),
       );
     });
+  }
+
+  List<Map<String, dynamic>> get _filteredRestaurants {
+    if (_searchController.text.isEmpty) return _savedRestaurants;
+    
+    return _savedRestaurants.where((restaurant) =>
+      restaurant['name']
+        .toLowerCase()
+        .contains(_searchController.text.toLowerCase())
+    ).toList();
   }
 
   @override
@@ -93,7 +103,7 @@ _savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4
 
           // Restaurant List
           Expanded(
-            child: _savedRestaurants.isEmpty
+            child: _filteredRestaurants.isEmpty
                 ? const Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -109,9 +119,9 @@ _savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: _savedRestaurants.length,
+                    itemCount: _filteredRestaurants.length,
                     itemBuilder: (context, index) {
-                      final restaurant = _savedRestaurants[index];
+                      final restaurant = _filteredRestaurants[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: RestaurantCard(
@@ -135,10 +145,10 @@ _savedRestaurants = List.from(MockRestaurants.data.where((r) => r['rating'] >= 4
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
+        currentIndex: 2, // Corrigido para o índice correto dos Salvos
         onTap: (index) {
-          if (index != 1) {
-            final routes = ['/home', '/saved', '/history', '/profile'];
+          if (index != 2) {
+            final routes = ['/home', '/cart', '/saved', '/history', '/profile'];
             Navigator.pushReplacementNamed(context, routes[index]);
           }
         },

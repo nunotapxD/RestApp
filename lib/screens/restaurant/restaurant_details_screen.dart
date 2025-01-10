@@ -9,15 +9,14 @@ class RestaurantDetailsScreen extends StatefulWidget {
 
 class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
   final Map<String, int> _quantities = {};
-  String? _selectedPayment;
+  String _selectedPayment = 'Cartão de Crédito';
   Map<String, dynamic>? _restaurant;
   List<Map<String, dynamic>> _menuItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedPayment = 'Cartão de Crédito'; // Valor inicial
-  }
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _complementController = TextEditingController();
 
   @override
   void didChangeDependencies() {
@@ -56,60 +55,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
               'description': 'Sanduíche típico do Porto com molho especial',
               'price': 65.90,
             },
-            {
-              'id': '3',
-              'category': 'Vinhos',
-              'name': 'Vinho do Porto',
-              'description': 'Taça de vinho do Porto',
-              'price': 22.90,
-            },
-            {
-              'id': '4',
-              'category': 'Sobremesas',
-              'name': 'Pastel de Nata',
-              'description': 'Doce tradicional português',
-              'price': 3.50,
-            },
-          ];
-          break;
-        
-        case '3': // Pizza Express
-          _restaurant = {
-            'id': '3',
-            'name': 'Pizza Express',
-            'rating': 4.7,
-            'reviews': 200,
-            'deliveryTime': '20-35 min',
-          };
-          _menuItems = [
-            {
-              'id': '1',
-              'category': 'Pizzas',
-              'name': 'Pizza Margherita',
-              'description': 'Molho de tomate, mussarela e manjericão',
-              'price': 55.90,
-            },
-            {
-              'id': '2',
-              'category': 'Pizzas',
-              'name': 'Pizza Pepperoni',
-              'description': 'Molho de tomate, mussarela e pepperoni',
-              'price': 65.90,
-            },
-            {
-              'id': '3',
-              'category': 'Bebidas',
-              'name': 'Refrigerante',
-              'description': '350ml',
-              'price': 5.90,
-            },
-            {
-              'id': '4',
-              'category': 'Sobremesas',
-              'name': 'Tiramisù',
-              'description': 'Clássica sobremesa italiana',
-              'price': 25.90,
-            },
           ];
           break;
           
@@ -136,27 +81,6 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
               'description': 'Costela assada lentamente com temperos especiais',
               'price': 79.90,
             },
-            {
-              'id': '3',
-              'category': 'Churrasco',
-              'name': 'Fraldinha',
-              'description': 'Fraldinha grelhada com batatas rústicas',
-              'price': 69.90,
-            },
-            {
-              'id': '4',
-              'category': 'Bebidas',
-              'name': 'Refrigerante',
-              'description': '350ml',
-              'price': 5.90,
-            },
-            {
-              'id': '5',
-              'category': 'Bebidas',
-              'name': 'Suco Natural',
-              'description': '500ml',
-              'price': 8.90,
-            },
           ];
       }
     });
@@ -169,6 +93,116 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
       sum += item['price'] * quantity;
     });
     return sum;
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.green,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Pedido Realizado!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Seu pedido foi confirmado com sucesso',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                String orderId = 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+                Navigator.pushReplacementNamed(
+                  context,
+                  '/order-tracking',
+                  arguments: orderId,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                minimumSize: const Size.fromHeight(50),
+              ),
+              child: const Text('Acompanhar Pedido'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentOption(
+    String title,
+    String subtitle,
+    IconData icon,
+    StateSetter setModalState,
+  ) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setModalState(() {
+            _selectedPayment = title;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _selectedPayment == title ? Colors.orange : Colors.transparent,
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: Colors.orange),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (_selectedPayment == title)
+                const Icon(Icons.check_circle, color: Colors.orange),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -362,6 +396,7 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
           ),
           child: Column(
             children: [
+              // Header
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: const BoxDecoration(
@@ -387,111 +422,181 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
                   ],
                 ),
               ),
+              
+              // Form e conteúdo
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    const Text(
-                      'Forma de Pagamento',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildPaymentOption(
-                      icon: Icons.credit_card,
-                      title: 'Cartão de Crédito',
-                      subtitle: '****-****-****-1234',
-                      setModalState: setModalState,
-                    ),
-                    _buildPaymentOption(
-                      icon: Icons.account_balance,
-                      title: 'MBWAY',
-                      subtitle: 'Pagar com QR Code',
-                      setModalState: setModalState,
-                    ),
-                    _buildPaymentOption(
-                      icon: Icons.money,
-                      title: 'Dinheiro',
-                      subtitle: 'Pagar na entrega',
-                      setModalState: setModalState,
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Resumo do Pedido',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    for (var entry in _quantities.entries) ...[
-                      if (entry.value > 0) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${entry.value}x ${_menuItems.firstWhere((item) => item['id'] == entry.key)['name']}',
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                            Text(
-                              '€${(_menuItems.firstWhere((item) => item['id'] == entry.key)['price'] * entry.value).toStringAsFixed(2)}',
-                              style: const TextStyle(color: Colors.orange),
-                            ),
-                          ],
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      const Text(
+                        'Dados de Entrega',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 8),
-                      ],
-                    ],
-                    const Divider(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Total:'),
-                        Text(
-                          '€${_total.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Colors.orange,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Nome Completo',
+                          filled: true,
+                          fillColor: Colors.black,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor, insira seu nome';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _phoneController,
+                        decoration: InputDecoration(
+                          labelText: 'Telefone',
+                          filled: true,
+                          fillColor: Colors.black,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor, insira seu telefone';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _addressController,
+                        decoration: InputDecoration(
+                          labelText: 'Endereço',
+                          filled: true,
+                          fillColor: Colors.black,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor, insira seu endereço';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _complementController,
+                        decoration: InputDecoration(
+                          labelText: 'Complemento / Apartamento',
+                          filled: true,
+                          fillColor: Colors.black,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Métodos de pagamento
+                      const Text(
+                        'Forma de Pagamento',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildPaymentOption(
+                        'Cartão de Crédito',
+                        '****-****-****-1234',
+                        Icons.credit_card,
+                        setModalState,
+                      ),
+                      _buildPaymentOption(
+                        'MBWAY',
+                        'Pagar com QR Code',
+                        Icons.qr_code,
+                        setModalState,
+                      ),
+                      _buildPaymentOption(
+                        'Dinheiro',
+                        'Pagar na entrega',
+                        Icons.payments,
+                        setModalState,
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Resumo do pedido
+                      const Text(
+                        'Resumo do Pedido',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._quantities.entries.map((entry) {
+                        final item = _menuItems.firstWhere((item) => item['id'] == entry.key);
+                        final total = item['price'] * entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('${entry.value}x ${item['name']}'),
+                              Text('€${total.toStringAsFixed(2)}'),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      const Divider(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total:'),
+                          Text(
+                            '€${_total.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+
+              // Botão de finalizar
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_selectedPayment == null)
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            'Selecione um método de pagamento para continuar',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                        ),
-                      ElevatedButton(
-                        onPressed: _selectedPayment == null ? null : () {
-                          Navigator.pop(context);
-                          _showSuccessDialog();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          minimumSize: const Size.fromHeight(50),
-                          disabledBackgroundColor: Colors.grey,
-                        ),
-                        child: const Text(
-                          'Finalizar Pedido',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ],
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState?.validate() ?? false) {
+                        Navigator.pop(context);
+                        _showSuccessDialog();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                    child: const Text(
+                      'Finalizar Pedido',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ),
               ),
@@ -502,113 +607,12 @@ class _RestaurantDetailsScreenState extends State<RestaurantDetailsScreen> {
     );
   }
 
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1E1E1E),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.check_circle_outline,
-              color: Colors.green,
-              size: 64,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Pedido Realizado!',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Seu pedido foi confirmado com sucesso',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                String orderId = 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/order-tracking',
-                  arguments: orderId,
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                minimumSize: const Size.fromHeight(50),
-              ),
-              child: const Text('Acompanhar Pedido'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required StateSetter setModalState,
-  }) {
-    return InkWell(
-      onTap: () {
-        setModalState(() {
-          setState(() {
-            _selectedPayment = title;
-          });
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: _selectedPayment == title ? Colors.orange : Colors.transparent,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.orange),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_selectedPayment == title)
-              const Icon(Icons.check_circle, color: Colors.orange)
-          ],
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _complementController.dispose();
+    super.dispose();
   }
 }

@@ -1,38 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../widgets/custom_bottom_nav.dart';
+import '../profile/profile_edit_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          const SliverAppBar(
-            floating: true,
-            title: Text('Perfil'),
-            centerTitle: true,
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const ProfileHeader(),
-                const SizedBox(height: 24),
-                const ProfileStats(),
-                const SizedBox(height: 24),
-                ProfileOptions(onLogout: () => _handleLogout(context)),
-              ],
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3,
-        onTap: (index) => _handleNavigation(context, index),
-      ),
-    );
-  }
 
   void _handleLogout(BuildContext context) {
     showDialog(
@@ -63,11 +34,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  void _handleNavigation(BuildContext context, int index) {
-    final routes = ['/home', '/saved', '/history', '/profile'];
-    if (index != 3) {
-      Navigator.pushReplacementNamed(context, routes[index]);
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          const SliverAppBar(
+            floating: true,
+            title: Text('Perfil'),
+            centerTitle: true,
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const ProfileHeader(),
+                const SizedBox(height: 24),
+                const ProfileStats(),
+                const SizedBox(height: 24),
+                ProfileOptions(onLogout: () => _handleLogout(context)),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 4,
+        onTap: (index) {
+          if (index != 4) {
+            final routes = ['/home', '/cart', '/saved', '/history', '/profile'];
+            Navigator.pushReplacementNamed(context, routes[index]);
+          }
+        },
+      ),
+    );
   }
 }
 
@@ -145,9 +144,9 @@ class ProfileStats extends StatelessWidget {
         color: const Color(0xFF1E1E1E),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: const Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: const [
+        children: [
           StatItem(value: '28', label: 'Pedidos'),
           StatItem(value: '12', label: 'Restaurantes'),
           StatItem(value: '138', label: 'Pontos'),
@@ -208,7 +207,10 @@ class ProfileOptions extends StatelessWidget {
           ProfileOptionTile(
             icon: Icons.person_outline,
             title: 'Editar perfil',
-            onTap: () {},
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileEditScreen()),
+            ),
           ),
           ProfileOptionTile(
             icon: Icons.location_on_outlined,
