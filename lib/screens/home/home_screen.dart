@@ -4,7 +4,7 @@ import '../../widgets/custom_bottom_nav.dart';
 import '../../utils/mock_restaurants.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -103,41 +103,10 @@ _restaurants = List.from(MockRestaurants.data);
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Descubra o restaurante ideal',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      
-                      // Stories/Updates section
-                      SizedBox(
-                        height: 100,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: const [
-                            UpdateStory(
-                              imageUrl: 'assets/images/update1.png',
-                              title: 'Novidades',
-                            ),
-                            UpdateStory(
-                              imageUrl: 'assets/images/update2.png',
-                              title: 'Promoções',
-                            ),
-                            UpdateStory(
-                              imageUrl: 'assets/images/update3.png',
-                              title: 'Eventos',
-                            ),
-                          ],
-                        ),
-                      ),
-                      
+                                        
                       const SizedBox(height: 20),
                       const Text(
-                        'Restaurantes próximos',
+                        'Restaurantes:',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,
@@ -198,10 +167,10 @@ class UpdateStory extends StatelessWidget {
   final String title;
 
   const UpdateStory({
-    Key? key,
+    super.key,
     required this.imageUrl,
     required this.title,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

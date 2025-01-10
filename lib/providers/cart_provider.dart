@@ -2,6 +2,8 @@
 
 import 'package:flutter/foundation.dart';
 import '../models/dish.dart';
+import '../services/coupon_service.dart';
+import '../services/auth_service.dart';
 
 class CartItem {
   final Dish dish;
@@ -19,22 +21,83 @@ class CartItem {
 
 class CartProvider extends ChangeNotifier {
   final Map<String, CartItem> _items = {};
-  
+  final CouponService _couponService = CouponService();
+  final AuthService _authService = AuthService();
+  String? _appliedCouponCode;
+  bool _requiresBiometrics = false;
+
   Map<String, CartItem> get items => {..._items};
+  String? get appliedCouponCode => _appliedCouponCode;
   
   int get itemCount {
     return _items.values.fold(0, (sum, item) => sum + item.quantity);
   }
   
-  double get total {
+  double get subtotal {
     return _items.values.fold(0.0, (sum, item) => sum + item.total);
+  }
+
+  double get discount {
+    if (_appliedCouponCode == null) return 0;
+    return _couponService.calculateDiscount(_appliedCouponCode!, subtotal);
+  }
+
+  double get deliveryFee {
+    if (subtotal >= 50) return 0; // Free delivery over €50
+    return 5.0; // Base delivery fee
+  }
+  
+  double get total {
+    return subtotal - discount + deliveryFee;
   }
   
   bool get isEmpty => _items.isEmpty;
 
+  Future<bool> applyCoupon(String code) async {
+    final coupon = _couponService.validateCoupon(code);
+    if (coupon == null) return false;
+    
+    _appliedCouponCode = code;
+    notifyListeners();
+    return true;
+  }
+
+  void removeCoupon() {
+    _appliedCouponCode = null;
+    notifyListeners();
+  }
+
+  Future<bool> requiresBiometricAuth() async {
+    if (!_requiresBiometrics) return false;
+    return await _authService.isBiometricsAvailable();
+  }
+
+  Future<bool> authenticateForPayment() async {
+    if (!_requiresBiometrics) return true;
+    return await _authService.authenticateWithBiometrics();
+  }
+
+  void setRequiresBiometrics(bool value) {
+    _requiresBiometrics = value;
+    notifyListeners();
+  }
+
+  Future<Map<String, dynamic>> getOrderSummary() async {
+    bool canUseBiometrics = await requiresBiometricAuth();
+    
+    return {
+      'subtotal': subtotal,
+      'discount': discount,
+      'deliveryFee': deliveryFee,
+      'total': total,
+      'appliedCoupon': _appliedCouponCode,
+      'itemCount': itemCount,
+      'canUseBiometrics': canUseBiometrics,
+    };
+  }
+
   void addToCart(Dish dish) {
     if (_items.containsKey(dish.id)) {
-      // Aumenta a quantidade se o item já existe
       _items.update(
         dish.id,
         (existingItem) => CartItem(
@@ -44,7 +107,6 @@ class CartProvider extends ChangeNotifier {
         ),
       );
     } else {
-      // Adiciona novo item
       _items.putIfAbsent(
         dish.id,
         () => CartItem(
@@ -61,7 +123,6 @@ class CartProvider extends ChangeNotifier {
     if (!_items.containsKey(dish.id)) return;
 
     if (_items[dish.id]!.quantity > 1) {
-      // Diminui a quantidade se tiver mais de um
       _items.update(
         dish.id,
         (existingItem) => CartItem(
@@ -71,7 +132,6 @@ class CartProvider extends ChangeNotifier {
         ),
       );
     } else {
-      // Remove o item se só tiver um
       _items.remove(dish.id);
     }
     notifyListeners();
@@ -95,70 +155,9 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void removeItem(String dishId) {
-    _items.remove(dishId);
-    notifyListeners();
-  }
-
   void clear() {
     _items.clear();
+    _appliedCouponCode = null;
     notifyListeners();
-  }
-
-  int getQuantity(String dishId) {
-    return _items[dishId]?.quantity ?? 0;
-  }
-
-  bool hasItem(String dishId) {
-    return _items.containsKey(dishId);
-  }
-
-  CartItem? getItem(String dishId) {
-    return _items[dishId];
-  }
-
-  // Método para aplicar cupom de desconto
-  double applyDiscount(String couponCode) {
-    // Implementar lógica de desconto aqui
-    // Por exemplo:
-    switch (couponCode) {
-      case 'PRIMEIRO10':
-        return total * 0.9; // 10% de desconto
-      case 'FRETE':
-        return total - 10; // €10 de desconto
-      default:
-        return total;
-    }
-  }
-
-  // Método para verificar se pode aplicar frete grátis
-  bool canApplyFreeDelivery() {
-    return total >= 50; // Frete grátis para compras acima de €50
-  }
-
-  // Método para calcular frete
-  double calculateDeliveryFee(double distance) {
-    if (canApplyFreeDelivery()) return 0;
-    
-    // Base de €5 + €2 por km
-    return 5 + (distance * 2);
-  }
-
-  // Método para obter resumo do pedido
-  Map<String, double> getOrderSummary({
-    String? couponCode,
-    double distance = 0,
-  }) {
-    double subtotal = total;
-    double discount = couponCode != null ? total - applyDiscount(couponCode) : 0;
-    double deliveryFee = calculateDeliveryFee(distance);
-    double finalTotal = subtotal - discount + deliveryFee;
-
-    return {
-      'subtotal': subtotal,
-      'discount': discount,
-      'deliveryFee': deliveryFee,
-      'total': finalTotal,
-    };
   }
 }

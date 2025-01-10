@@ -13,6 +13,7 @@ import 'screens/profile/profile_screen.dart';
 import 'screens/restaurant/restaurant_details_screen.dart';
 import 'screens/saved/saved_screen.dart';
 import 'screens/search/search_screen.dart';
+import 'screens/tracking/order_tracking_screen.dart';
 import 'screens/welcome_screen.dart';
 
 void main() {
@@ -43,7 +44,6 @@ class RestauApp extends StatelessWidget {
           primary: Colors.orange,
           secondary: Colors.orangeAccent,
           surface: Color(0xFF1E1E1E),
-          background: Colors.black,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.black,
@@ -110,17 +110,20 @@ class RestauApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => WelcomeScreen(),
-        '/login': (context) => LoginScreen(),
-        '/signup': (context) => SignupScreen(),
+        '/': (context) => const WelcomeScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
         '/location': (context) => LocationScreen(),
-        '/home': (context) => HomeScreen(),
+        '/home': (context) => const HomeScreen(),
         '/history': (context) => const HistoryScreen(),
-        '/search': (context) => SearchScreen(),
-        '/restaurant-details': (context) => RestaurantDetailsScreen(),
+        '/search': (context) => const SearchScreen(),
+        '/restaurant-details': (context) => const RestaurantDetailsScreen(),
         '/map-route': (context) => MapRouteScreen(),
-        '/saved': (context) => SavedScreen(),
-        '/profile': (context) => ProfileScreen(),
+        '/saved': (context) => const SavedScreen(),
+        '/order-tracking': (context) => OrderTrackingScreen(
+    orderId: ModalRoute.of(context)!.settings.arguments as String,
+  ),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }
