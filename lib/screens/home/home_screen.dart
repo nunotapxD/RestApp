@@ -150,14 +150,26 @@ _restaurants = List.from(MockRestaurants.data);
         ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index != 0) {
-            final routes = ['/home', '/saved', '/history', '/profile'];
-            Navigator.pushReplacementNamed(context, routes[index]);
-          }
-        },
-      ),
+  currentIndex: 0, // Home é o índice 0
+  onTap: (index) => setState(() {
+    switch (index) {
+      case 0: // Home - já estamos aqui
+        break;
+      case 1: // Busca
+        Navigator.pushReplacementNamed(context, '/search');
+        break;
+      case 2: // Carrinho
+        Navigator.pushReplacementNamed(context, '/cart');
+        break;
+      case 3: // Pedidos
+        Navigator.pushReplacementNamed(context, '/history');
+        break;
+      case 4: // Perfil
+        Navigator.pushReplacementNamed(context, '/profile');
+        break;
+    }
+  }),
+  ),
     );
   }
 }

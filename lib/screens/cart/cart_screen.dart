@@ -6,6 +6,84 @@ import '../../widgets/custom_bottom_nav.dart';
 class CartScreen extends StatelessWidget {
   const CartScreen({Key? key}) : super(key: key);
 
+  void _handleCheckout(BuildContext context, CartProvider cart) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E1E),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(color: Colors.orange),
+            const SizedBox(height: 16),
+            const Text('Processando seu pedido...'),
+          ],
+        ),
+      ),
+    );
+
+    // Simular processamento
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Fecha o diálogo de loading
+      
+      // Gera um ID de pedido
+      String orderId = 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+      
+      // Limpa o carrinho
+      cart.clear();
+      
+      // Mostra diálogo de sucesso
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: const Color(0xFF1E1E1E),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 64,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pedido Realizado!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Seu pedido foi confirmado com sucesso',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/order-tracking',
+                    arguments: orderId,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                child: const Text('Acompanhar Pedido'),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,14 +91,19 @@ class CartScreen extends StatelessWidget {
         title: const Text('Carrinho'),
         centerTitle: true,
         actions: [
-          TextButton(
-            onPressed: () {
-              context.read<CartProvider>().clear();
+          Consumer<CartProvider>(
+            builder: (context, cart, child) {
+              if (cart.isEmpty) return const SizedBox.shrink();
+              return TextButton(
+                onPressed: () {
+                  cart.clear();
+                },
+                child: const Text(
+                  'Limpar',
+                  style: TextStyle(color: Colors.red),
+                ),
+              );
             },
-            child: const Text(
-              'Limpar',
-              style: TextStyle(color: Colors.red),
-            ),
           ),
         ],
       ),
@@ -207,16 +290,20 @@ class CartScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () {
-                          // Implementar checkout
-                        },
+                        onPressed: cart.isEmpty ? null : () => _handleCheckout(context, cart),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange,
                           minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(25),
+                          ),
                         ),
                         child: const Text(
                           'Finalizar Pedido',
-                          style: TextStyle(fontSize: 16),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -228,9 +315,9 @@ class CartScreen extends StatelessWidget {
         },
       ),
       bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
+        currentIndex: 2,
         onTap: (index) {
-          if (index != 1) {
+          if (index != 2) {
             final routes = ['/home', '/cart', '/saved', '/history', '/profile'];
             Navigator.pushReplacementNamed(context, routes[index]);
           }

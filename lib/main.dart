@@ -10,6 +10,7 @@ import 'providers/favorites_provider.dart';
 import 'providers/menu_categories_provider.dart';
 
 // Auth Screens
+import 'providers/user_settings_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/signup_screen.dart';
 // Feature Screens
@@ -24,6 +25,7 @@ import 'screens/saved/saved_screen.dart';
 import 'screens/search/search_screen.dart';
 import 'screens/tracking/order_tracking_screen.dart';
 import 'screens/welcome_screen.dart';
+import '../services/chat_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +49,8 @@ class RestauApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SessionProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => MenuCategoriesProvider()),
+        ChangeNotifierProvider(create: (_) => ChatService()),
+        ChangeNotifierProvider(create: (_) => UserSettingsProvider()),
       ],
       child: MaterialApp(
         title: 'RestauApp',

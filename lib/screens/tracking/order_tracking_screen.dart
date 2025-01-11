@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+
+import '../../services/chat_service.dart';
+import '../chat/chat_screen.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String orderId;
@@ -259,44 +263,67 @@ class OrderTrackingScreen extends StatelessWidget {
     );
   }
 
-  void _showContactOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+void _showContactOptions(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: const Color(0xFF1E1E1E),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.message, color: Colors.orange),
+            title: const Text('Enviar Mensagem'),
+            onTap: () {
+              Navigator.pop(context);
+              // Inicializar chat service
+              final chatService = Provider.of<ChatService>(context, listen: false);
+              chatService.initializeChat(orderId, 'D001');
+              
+              // Navegar para a tela de chat
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    orderId: orderId,
+                    driverName: 'João Silva',
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.phone, color: Colors.orange),
+            title: const Text('Ligar para Entregador'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Simulando chamada para o entregador...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.support_agent, color: Colors.orange),
+            title: const Text('Suporte'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Abrindo chat com suporte...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.message, color: Colors.orange),
-              title: const Text('Enviar Mensagem'),
-              onTap: () {
-                Navigator.pop(context);
-                // Implementar chat
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.phone, color: Colors.orange),
-              title: const Text('Ligar para Entregador'),
-              onTap: () {
-                Navigator.pop(context);
-                // Implementar chamada
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.support_agent, color: Colors.orange),
-              title: const Text('Suporte'),
-              onTap: () {
-                Navigator.pop(context);
-                // Implementar suporte
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+    ),
+  );
   }
 }
