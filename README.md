@@ -68,7 +68,7 @@ lib/
 1. Certifique-se de ter o Flutter instalado
 2. Clone este repositório
 ```bash
-git clone https://github.com/seu-usuario/restauapp.git
+git clone https://github.com/nunotapxd/RestApp.git
 ```
 3. Instale as dependências
 ```bash
