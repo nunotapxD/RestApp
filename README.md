@@ -1,4 +1,4 @@
-# RestauApp 🍽️
+# RestApp 🍽️
 
 RestauApp é uma aplicação frontend desenvolvida em Flutter para demonstrar a implementação de interfaces modernas de um aplicativo de delivery de comida. Este projeto foi desenvolvido como parte da disciplina de Desenvolvimento de Interfaces.
 
@@ -72,7 +72,7 @@ git clone https://github.com/nunotapxd/RestApp.git
 ```
 3. Instale as dependências
 ```bash
-cd restauapp
+cd restapp
 flutter pub get
 ```
 4. Execute o aplicativo
